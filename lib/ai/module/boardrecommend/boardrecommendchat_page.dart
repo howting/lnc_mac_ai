@@ -1,20 +1,21 @@
 import 'package:extended_text/extended_text.dart';
 import 'package:extended_text_field/extended_text_field.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:get/get.dart';
 import 'package:lncmacai/ai/module/voice_record/customer_chat_voice_record_bar.dart';
 import 'package:lncmacai/ai/module/voice_record/customer_chat_voice_record_layout.dart';
 import 'package:lncmacai/ai/routes/app_pages.dart';
+import 'package:lncmacai/widgets/inapp_webview_widget.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:flutter/services.dart';
 
 import 'boardrecommendchat_controller.dart';
 
-class boardrecommendChatPage
-    extends GetView<boardrecommendChatController> {
+class boardrecommendChatPage extends GetView<boardrecommendChatController> {
   @override
   Widget build(BuildContext context) {
     return CustomerChatVoiceRecordLayout(
@@ -24,13 +25,11 @@ class boardrecommendChatPage
         controller.handleVoiceFile(path, durationSec: sec);
       },
       builder: (bar) => GestureDetector(
-        onTap: () =>
-            FocusScope.of(context).requestFocus(FocusNode()),
+        onTap: () => FocusScope.of(context).requestFocus(FocusNode()),
         child: AnimatedContainer(
           duration: Duration.zero,
           height: MediaQuery.of(context).viewInsets.bottom > 0
-              ? Get.height -
-              MediaQuery.of(context).viewInsets.bottom
+              ? Get.height - MediaQuery.of(context).viewInsets.bottom
               : Get.height,
           child: Scaffold(
             backgroundColor: Colors.white,
@@ -39,7 +38,7 @@ class boardrecommendChatPage
               children: [
                 Expanded(
                   child: ObxValue<RxList>(
-                        (list) => controller.chatMessageList.isEmpty
+                    (list) => controller.chatMessageList.isEmpty
                         ? _buildEmptyHint()
                         : _buildChatList(),
                     controller.chatMessageList,
@@ -131,15 +130,14 @@ class boardrecommendChatPage
       child: ListView.builder(
         itemCount: controller.chatMessageList.length,
         itemBuilder: (_, index) {
-          final message =
-          controller.chatMessageList[index];
+          final message = controller.chatMessageList[index];
           return message.isMe
               ? rightbubble(message.data)
               : leftbubble(
-            message,
-            index,
-            isAnswering: message.isAnswering,
-          );
+                  message,
+                  index,
+                  isAnswering: message.isAnswering,
+                );
         },
       ),
     );
@@ -148,10 +146,10 @@ class boardrecommendChatPage
   // ================= Bubble =================
 
   Widget leftbubble(
-      ChatMessage message,
-      int index, {
-        bool isAnswering = false,
-      }) {
+    ChatMessage message,
+    int index, {
+    bool isAnswering = false,
+  }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -159,7 +157,7 @@ class boardrecommendChatPage
           children: [
             Container(
               constraints: BoxConstraints(
-                maxWidth: Get.width * 0.7,
+                maxWidth: Get.width * 0.8,
                 minWidth: 40.w,
               ),
               margin: EdgeInsets.symmetric(
@@ -179,10 +177,9 @@ class boardrecommendChatPage
                 ),
               ),
               child: AnimatedSwitcher(
-                duration:
-                const Duration(milliseconds: 150),
+                duration: const Duration(milliseconds: 150),
                 child: (isAnswering &&
-                    (message.data.trim().isEmpty || message.data == "生成中…"))
+                        (message.data.trim().isEmpty || message.data == "生成中…"))
                     ? _buildTyping()
                     : _buildMessageBody(message),
               ),
@@ -215,6 +212,7 @@ class boardrecommendChatPage
       ],
     );
   }
+
   final RegExp _urlRegex = RegExp(r'(https?:\/\/[^\s]+)', caseSensitive: false);
 
   String? _extractFirstUrl(String text) {
@@ -260,7 +258,8 @@ class boardrecommendChatPage
         if (action == "open") {
           final uri = Uri.tryParse(url);
           if (uri != null) {
-            final ok = await launchUrl(uri, mode: LaunchMode.externalApplication);
+            final ok =
+                await launchUrl(uri, mode: LaunchMode.externalApplication);
             if (!ok) Fluttertoast.showToast(msg: "无法打开链接");
           }
         } else if (action == "copy") {
@@ -268,7 +267,16 @@ class boardrecommendChatPage
           Fluttertoast.showToast(msg: "已复制链接");
         }
       },
-      child: Text(text, style: const TextStyle(fontSize: 16)),
+      // child: Text(text, style: const TextStyle(fontSize: 16)),
+      child: Markdown(
+        shrinkWrap: true,
+        onTapLink: (text, href, title) {
+          print("$text , $href , $title ");
+          Get.to(() => InappWebviewWidget(text));
+        },
+        physics: const NeverScrollableScrollPhysics(),
+        data: text,
+      ),
     );
   }
 
@@ -285,7 +293,8 @@ class boardrecommendChatPage
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               if (title.isNotEmpty)
-                Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
+                Text(title,
+                    style: const TextStyle(fontWeight: FontWeight.bold)),
               if (comment.isNotEmpty) Text(comment),
             ],
           ),
@@ -293,8 +302,6 @@ class boardrecommendChatPage
       }).toList(),
     );
   }
-
-
 
   Widget _buildTyping() {
     return Row(
@@ -304,8 +311,7 @@ class boardrecommendChatPage
         SizedBox(
           width: 16,
           height: 16,
-          child:
-          CircularProgressIndicator(strokeWidth: 2),
+          child: CircularProgressIndicator(strokeWidth: 2),
         ),
         SizedBox(width: 8),
         Text('生成中…', style: TextStyle(fontSize: 16)),
@@ -333,14 +339,14 @@ class boardrecommendChatPage
   }
 
   Widget _buildTtsButton(
-      ChatMessage message,
-      int index,
-      bool isAnswering,
-      ) {
+    ChatMessage message,
+    int index,
+    bool isAnswering,
+  ) {
     return Padding(
       padding: EdgeInsets.only(left: 20.w, bottom: 6.h),
       child: ObxValue<RxMap>(
-            (_) => Offstage(
+        (_) => Offstage(
           offstage: isAnswering,
           child: InkWell(
             onTap: () => controller.textToWav(
@@ -349,13 +355,13 @@ class boardrecommendChatPage
             ),
             child: controller.files.containsKey(index)
                 ? const Icon(
-              Icons.play_circle,
-              color: Colors.brown,
-            )
+                    Icons.play_circle,
+                    color: Colors.brown,
+                  )
                 : const Icon(
-              Icons.download_for_offline,
-              color: Colors.brown,
-            ),
+                    Icons.download_for_offline,
+                    color: Colors.brown,
+                  ),
           ),
         ),
         controller.files,
@@ -398,27 +404,27 @@ class boardrecommendChatPage
         decoration: const InputDecoration(
           border: InputBorder.none,
           hintText: "输入你的消息...",
-          contentPadding:
-          EdgeInsets.symmetric(horizontal: 16),
+          contentPadding: EdgeInsets.symmetric(horizontal: 16),
         ),
       ),
     );
   }
 
   Widget sendButton() => _iconButton(
-    Icons.near_me,
-    controller.sendAction,
-  );
+        Icons.near_me,
+        controller.sendAction,
+      );
 
   Widget addButton() => _iconButton(
-    Icons.add,() => Fluttertoast.showToast(msg: "功能开发中"),
-  );
+        Icons.add,
+        () => Fluttertoast.showToast(msg: "功能开发中"),
+      );
 
   Widget _iconButton(
-      IconData icon,
-      VoidCallback onTap, {
-        bool alwaysEnabled = false,
-      }) {
+    IconData icon,
+    VoidCallback onTap, {
+    bool alwaysEnabled = false,
+  }) {
     return InkWell(
       onTap: () => (alwaysEnabled || controller.canSend.value) ? onTap() : null,
       child: Container(
@@ -435,46 +441,43 @@ class boardrecommendChatPage
   }
 
   Widget cameraButton() => _iconButton(
-    Icons.photo_camera,
+        Icons.photo_camera,
         () async {
-      final ctx = Get.context;
-      if (ctx == null) return;
+          final ctx = Get.context;
+          if (ctx == null) return;
 
-      final source = await showModalBottomSheet<ImageSource>(
-        context: ctx,
-        builder: (context) => SafeArea(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              ListTile(
-                leading: const Icon(Icons.photo_camera),
-                title: const Text("拍照"),
-                onTap: () => Navigator.pop(context, ImageSource.camera),
+          final source = await showModalBottomSheet<ImageSource>(
+            context: ctx,
+            builder: (context) => SafeArea(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  ListTile(
+                    leading: const Icon(Icons.photo_camera),
+                    title: const Text("拍照"),
+                    onTap: () => Navigator.pop(context, ImageSource.camera),
+                  ),
+                  ListTile(
+                    leading: const Icon(Icons.photo_library),
+                    title: const Text("相册"),
+                    onTap: () => Navigator.pop(context, ImageSource.gallery),
+                  ),
+                ],
               ),
-              ListTile(
-                leading: const Icon(Icons.photo_library),
-                title: const Text("相册"),
-                onTap: () => Navigator.pop(context, ImageSource.gallery),
-              ),
-            ],
-          ),
-        ),
+            ),
+          );
+
+          if (source == null) return;
+
+          await controller.pickImage(source: source);
+          if (controller.ossImageKeys.isNotEmpty) {
+            await controller.sendAction();
+          }
+        },
+        alwaysEnabled: true,
       );
-
-      if (source == null) return;
-
-      await controller.pickImage(source: source);
-      if (controller.ossImageKeys.isNotEmpty) {
-        await controller.sendAction();
-      }
-    },
-    alwaysEnabled: true,
-  );
-
-
 
 // ================= Helper =================
 // 下面 image / url / panel helper
 //（你原本邏輯已經很完整，僅排版，未改）
-
 }
