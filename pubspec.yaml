@@ -78,6 +78,10 @@ dependencies:
   provider: ^6.0.3
   vibration: ^1.7.6
   flutter_slidable: ^3.0.0
+  # markdown
+  flutter_markdown_plus: ^1.0.0+1
+  # webview
+  flutter_inappwebview: ^5.7.2+3
 
 dev_dependencies:
   flutter_test:
