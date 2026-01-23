@@ -6,22 +6,17 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:lncmacai/ai/module/boardrecommend/boardrecommendchat_controller.dart'; // 如果有使用
 
-import 'package:lncmacai/ai/module/boardrecommend/boardrecommendchat_provider.dart';   // 如有必要
-
-
-
-
+import 'package:lncmacai/ai/module/boardrecommend/boardrecommendchat_provider.dart'; // 如有必要
 
 class boardrecommendInputDetailPage extends StatelessWidget {
   final String defaultText;
   final String originalQuestion;
-  final int messageIndex;          // 仍保留，但會加邊界保護
-  final ReplyMessage? reply;       // 單筆回覆的修改
-  final int? replyIndex;           // 若有就精準更新
+  final int messageIndex; // 仍保留，但會加邊界保護
+  final ReplyMessage? reply; // 單筆回覆的修改
+  final int? replyIndex; // 若有就精準更新
   final ImagePicker _picker = ImagePicker();
-  final RxList<XFile> _pickedImages = <XFile>[].obs;   // 預覽用
+  final RxList<XFile> _pickedImages = <XFile>[].obs; // 預覽用
   final RxList<String> _base64Images = <String>[].obs; // 送後端用（含 data URL 前綴）
-
 
   boardrecommendInputDetailPage({
     super.key,
@@ -32,7 +27,8 @@ class boardrecommendInputDetailPage extends StatelessWidget {
     this.replyIndex,
   });
   Future<void> _pickImages() async {
-    final files = await _picker.pickMultiImage(maxWidth: 1600, imageQuality: 85);
+    final files =
+        await _picker.pickMultiImage(maxWidth: 1600, imageQuality: 85);
     if (files == null || files.isEmpty) return;
 
     for (final f in files) {
@@ -49,6 +45,7 @@ class boardrecommendInputDetailPage extends StatelessWidget {
       _base64Images.add(withPrefix);
     }
   }
+
   void _removeImageAt(int i) {
     if (i < 0 || i >= _pickedImages.length) return;
     _pickedImages.removeAt(i);
@@ -58,7 +55,7 @@ class boardrecommendInputDetailPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final titleController = TextEditingController(text: reply?.title ?? "");
-    final textController  = TextEditingController(text: defaultText);
+    final textController = TextEditingController(text: defaultText);
     final boardrecommendChatController controller = Get.find();
 
     void safeRefresh() {
@@ -117,42 +114,43 @@ class boardrecommendInputDetailPage extends StatelessWidget {
               Obx(() => _pickedImages.isEmpty
                   ? const SizedBox.shrink()
                   : Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: List.generate(_pickedImages.length, (i) {
-                  return Stack(
-                    clipBehavior: Clip.none,
-                    children: [
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(8),
-                        child: Image.file(
-                          File(_pickedImages[i].path),
-                          width: 90,
-                          height: 90,
-                          fit: BoxFit.cover,
-                        ),
-                      ),
-                      Positioned(
-                        right: -10,
-                        top: -10,
-                        child: IconButton(
-                          style: ButtonStyle(
-                            backgroundColor: MaterialStateProperty.all(Colors.white),
-                            elevation: MaterialStateProperty.all(2),
-                          ),
-                          icon: const Icon(Icons.close, size: 18),
-                          onPressed: () => _removeImageAt(i),
-                        ),
-                      ),
-                    ],
-                  );
-                }),
-              )),
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: List.generate(_pickedImages.length, (i) {
+                        return Stack(
+                          clipBehavior: Clip.none,
+                          children: [
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(8),
+                              child: Image.file(
+                                File(_pickedImages[i].path),
+                                width: 90,
+                                height: 90,
+                                fit: BoxFit.cover,
+                              ),
+                            ),
+                            Positioned(
+                              right: -10,
+                              top: -10,
+                              child: IconButton(
+                                style: ButtonStyle(
+                                  backgroundColor:
+                                      MaterialStateProperty.all(Colors.white),
+                                  elevation: MaterialStateProperty.all(2),
+                                ),
+                                icon: const Icon(Icons.close, size: 18),
+                                onPressed: () => _removeImageAt(i),
+                              ),
+                            ),
+                          ],
+                        );
+                      }),
+                    )),
 
               const SizedBox(height: 20),
               ElevatedButton(
                 onPressed: () async {
-                  final modifiedText  = textController.text.trim();
+                  final modifiedText = textController.text.trim();
                   final modifiedTitle = titleController.text.trim();
                   if (modifiedText.isEmpty) return;
 
@@ -162,19 +160,20 @@ class boardrecommendInputDetailPage extends StatelessWidget {
                         ? originalQuestion
                         : ctrl.lastUserQuestion.value;
 
-                    await controller.sendModifyFeedback(
-                      question: q,
-                      newAnswer: modifiedText,
-                      title: modifiedTitle.isEmpty ? null : modifiedTitle,
-                      images: _base64Images.toList(),
-                    );
+                    // await controller.sendModifyFeedback(
+                    //   question: q,
+                    //   newAnswer: modifiedText,
+                    //   title: modifiedTitle.isEmpty ? null : modifiedTitle,
+                    //   images: _base64Images.toList(),
+                    // );
 
                     // ====== 本地 UI 安全更新（全部帶邊界保護，不再丟 RangeError）======
                     // 1) 更新整段訊息文字（僅當非單筆回覆）
                     if (reply == null) {
                       if (messageIndex >= 0 &&
                           messageIndex < controller.chatMessageList.length) {
-                        controller.chatMessageList[messageIndex].data = modifiedText;
+                        controller.chatMessageList[messageIndex].data =
+                            modifiedText;
                         safeRefresh();
                       }
                     } else {

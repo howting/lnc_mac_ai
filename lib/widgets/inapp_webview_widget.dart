@@ -92,7 +92,7 @@ class InappWebviewWidgetState extends State<InappWebviewWidget> {
         appBar: AppBar(
           backgroundColor: const Color.fromRGBO(21, 21, 21, 1),
           title: const Text(
-            "LNC AI Service",
+            "LNCMac AI Home",
             style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
           ),
           centerTitle: true,

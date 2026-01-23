@@ -85,8 +85,8 @@ class _MachineInfoListItemState extends State<MachineInfoListItem> {
     if (!mounted) return;
     if (isConnectStateSuccess) {
       Future.delayed(const Duration(milliseconds: 100), () {
-        Get.toNamed(Routes.MACHINE_CHAT,
-            arguments: {'ip': ip, 'machineName': name});
+        // Get.toNamed(Routes.MACHINE_CHAT,
+        //     arguments: {'ip': ip, 'machineName': name});
         // Get.toNamed(Routes.MAH_MACHINE_MAIN,
         //     arguments: {'ip': ip, 'machineName': name});
       });

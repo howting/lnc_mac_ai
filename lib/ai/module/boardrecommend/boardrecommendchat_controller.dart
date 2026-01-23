@@ -45,9 +45,9 @@ class boardrecommendChatController extends GetxController {
   // =============================
   final ImagePicker _picker = ImagePicker();
   final OssUploader _ossUploader =
-  OssUploader('https://www.lnc-ai.com/api/generate_oss_signature/');
+      OssUploader('https://www.lnc-ai.com/api/generate_oss_signature/');
 
-  final RxList<String> ossImageKeys = <String>[].obs;
+  final List<String> ossImageKeys = [];
   final RxList<XFile> selectedImages = <XFile>[].obs;
 
   // =============================
@@ -84,33 +84,60 @@ class boardrecommendChatController extends GetxController {
   // =============================
   // Image pick + upload (OSS)
   // =============================
-  Future<void> pickImage({ImageSource source = ImageSource.gallery}) async {
-    final XFile? image = await _picker.pickImage(source: source);
+  // Future<void> pickImage({ImageSource source = ImageSource.gallery}) async {
+  //   final XFile? image = await _picker.pickImage(source: source);
+  //   if (image == null) return;
+
+  //   Get.dialog(
+  //     const Center(child: CircularProgressIndicator()),
+  //     barrierDismissible: false,
+  //   );
+
+  //   try {
+  //     selectedImages.clear();
+  //     ossImageKeys.clear();
+  //     selectedImages.add(image);
+
+  //     final ext = p.extension(image.path);
+  //     final filename =
+  //         'board_${DateTime.now().millisecondsSinceEpoch}${ext.isEmpty ? '.jpg' : ext}';
+
+  //     final sign = await _ossUploader.uploadXFile(image, filename);
+  //     ossImageKeys.add(sign.objectKey);
+
+  //     _updateCanSend();
+  //     Get.snackbar("圖片上傳完成", "已上傳 1 張圖片");
+  //   } catch (e) {
+  //     Get.snackbar("上傳失敗", e.toString());
+  //   } finally {
+  //     if (Get.isDialogOpen == true) Get.back();
+  //   }
+  // }
+  Future<void> pickImage({required ImageSource source}) async {
+    final XFile? image =
+        await _picker.pickImage(source: source, imageQuality: 80);
     if (image == null) return;
 
-    Get.dialog(
-      const Center(child: CircularProgressIndicator()),
-      barrierDismissible: false,
-    );
+    // 1. 立即加入預覽清單，讓 UI 顯示
+    selectedImages.add(image);
+    canSend.value = true;
 
     try {
-      selectedImages.clear();
-      ossImageKeys.clear();
-      selectedImages.add(image);
-
-      final ext = p.extension(image.path);
+      // 2. 開始背景上傳
+      final ext = p.extension(image.path).toLowerCase();
       final filename =
-          'board_${DateTime.now().millisecondsSinceEpoch}${ext.isEmpty ? '.jpg' : ext}';
+          "workorder-uploads/${DateTime.now().millisecondsSinceEpoch}$ext";
 
+      // 注意：這裡不需要 Get.dialog 轉圈圈了，因為我們是背景上傳
       final sign = await _ossUploader.uploadXFile(image, filename);
-      ossImageKeys.add(sign.objectKey);
 
-      _updateCanSend();
-      Get.snackbar("圖片上傳完成", "已上傳 1 張圖片");
+      // 3. 上傳成功，將 Key 存入待發送清單
+      ossImageKeys.add(sign.objectKey);
+      print("圖片預上傳成功: ${sign.objectKey}");
     } catch (e) {
-      Get.snackbar("上傳失敗", e.toString());
-    } finally {
-      if (Get.isDialogOpen == true) Get.back();
+      // 如果上傳失敗，從預覽中移除並提示
+      selectedImages.remove(image);
+      Get.snackbar("上傳失敗", "圖片上傳雲端失敗，請重試");
     }
   }
 
@@ -121,12 +148,19 @@ class boardrecommendChatController extends GetxController {
     try {
       textFocusNode.unfocus();
       final text = (overrideText ?? textController.text).trim();
-      if (text.isEmpty && ossImageKeys.isEmpty) return;
+      if (text.isEmpty || text == "") {
+        Get.snackbar("發送失敗", "請輸入你的問題");
+        return;
+      }
+
+      // 快照備份當前待發送的數據
+      final List<XFile> imagesToDisplay = List.from(selectedImages);
 
       chatMessageList.add(ChatMessage(
         data: text.isNotEmpty ? text : "[已上傳圖片]",
         question: text,
         isMe: true,
+        images: imagesToDisplay,
       ));
 
       if (overrideText == null) textController.clear();
@@ -201,19 +235,17 @@ class boardrecommendChatController extends GetxController {
           return;
         }
 
-        final r =
-            map["response_data"] ??
-                map["response"] ??
-                map["data"];
+        final r = map["response_data"] ?? map["response"] ?? map["data"];
 
         if (r is! Map) return;
 
         debugPrint("WS DATA: $r");
-        debugPrint("WS is_finished raw: ${r["is_finished"]} (${r["is_finished"]?.runtimeType})");
+        debugPrint(
+            "WS is_finished raw: ${r["is_finished"]} (${r["is_finished"]?.runtimeType})");
 
         final String inqId = r["inquiry_id"]?.toString() ?? "";
         final idx = chatMessageList.indexWhere(
-              (m) => m.inquiryId == inqId,
+          (m) => m.inquiryId == inqId,
         );
         if (idx == -1) return;
 
@@ -246,13 +278,11 @@ class boardrecommendChatController extends GetxController {
         debugPrint("WS handler error: $e");
         debugPrint("$s");
       }
-    },
-        onError: (e) {
-          debugPrint("WS error: $e");
-        },
-        onDone: () {
-          debugPrint("WS closed");
-        });
+    }, onError: (e) {
+      debugPrint("WS error: $e");
+    }, onDone: () {
+      debugPrint("WS closed");
+    });
   }
 
   // =============================
@@ -273,8 +303,7 @@ class boardrecommendChatController extends GetxController {
 
     if (res.body?.code != "success" || res.body?.data == null) return;
 
-    final questionText =
-    (res.body!.data!["question"] ?? "").toString().trim();
+    final questionText = (res.body!.data!["question"] ?? "").toString().trim();
     if (questionText.isEmpty) return;
 
     lastUserQuestion.value = questionText;
@@ -325,6 +354,7 @@ class ChatMessage {
   bool isMe;
   bool isAnswering;
   List<ReplyMessage>? replyList;
+  List<XFile>? images;
 
   ChatMessage({
     required this.data,
@@ -332,6 +362,7 @@ class ChatMessage {
     this.question,
     this.inquiryId,
     this.isAnswering = false,
+    this.images,
     this.replyList,
   });
 }

@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:extended_text/extended_text.dart';
 import 'package:extended_text_field/extended_text_field.dart';
 import 'package:flutter/material.dart';
@@ -44,6 +46,7 @@ class boardrecommendChatPage extends GetView<boardrecommendChatController> {
                     controller.chatMessageList,
                   ),
                 ),
+                buildImagePreviewBar(),
                 buttonRow(bar),
               ],
             ),
@@ -132,7 +135,7 @@ class boardrecommendChatPage extends GetView<boardrecommendChatController> {
         itemBuilder: (_, index) {
           final message = controller.chatMessageList[index];
           return message.isMe
-              ? rightbubble(message.data)
+              ? rightbubble(message)
               : leftbubble(
                   message,
                   index,
@@ -191,24 +194,71 @@ class boardrecommendChatPage extends GetView<boardrecommendChatController> {
     );
   }
 
-  Widget rightbubble(String text) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.end,
+  // Widget rightbubble(String text) {
+  //   return Row(
+  //     mainAxisAlignment: MainAxisAlignment.end,
+  //     children: [
+  //       Container(
+  //         constraints: BoxConstraints(maxWidth: Get.width * 0.7),
+  //         margin: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
+  //         padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 8.h),
+  //         decoration: const BoxDecoration(
+  //           color: Color(0xFFDFF5E1),
+  //           borderRadius: BorderRadius.only(
+  //             topLeft: Radius.circular(15),
+  //             bottomLeft: Radius.circular(15),
+  //             bottomRight: Radius.circular(15),
+  //           ),
+  //         ),
+  //         child: Text(text, style: const TextStyle(fontSize: 16)),
+  //       ),
+  //     ],
+  //   );
+  // }
+
+  Widget rightbubble(ChatMessage message) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.end,
       children: [
-        Container(
-          constraints: BoxConstraints(maxWidth: Get.width * 0.7),
-          margin: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
-          padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 8.h),
-          decoration: const BoxDecoration(
-            color: Color(0xFFDFF5E1),
-            borderRadius: BorderRadius.only(
-              topLeft: Radius.circular(15),
-              bottomLeft: Radius.circular(15),
-              bottomRight: Radius.circular(15),
+        // 1. 文字氣泡
+        if (message.data.isNotEmpty && message.data != "(圖片消息)")
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              Container(
+                constraints: BoxConstraints(maxWidth: Get.width * 0.7),
+                padding: EdgeInsets.all(10.h),
+                margin: EdgeInsets.only(right: 12.w, bottom: 4.h),
+                decoration: BoxDecoration(
+                  color: Colors.blueAccent,
+                  borderRadius: BorderRadius.circular(15),
+                ),
+                child: Text(message.data,
+                    style: TextStyle(color: Colors.white, fontSize: 16.sp)),
+              ),
+            ],
+          ),
+
+        // 2. 圖片預覽 (緊跟在文字下方)
+        if (message.images != null && message.images!.isNotEmpty)
+          Padding(
+            padding: EdgeInsets.only(right: 12.w, bottom: 8.h),
+            child: Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: message.images!.map((xfile) {
+                return ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: Image.file(
+                    File(xfile.path),
+                    width: 120.w,
+                    height: 120.w,
+                    fit: BoxFit.cover,
+                  ),
+                );
+              }).toList(),
             ),
           ),
-          child: Text(text, style: const TextStyle(fontSize: 16)),
-        ),
       ],
     );
   }
@@ -369,6 +419,65 @@ class boardrecommendChatPage extends GetView<boardrecommendChatController> {
     );
   }
 
+  Widget buildImagePreviewBar() {
+    return Obx(() {
+      if (controller.selectedImages.isEmpty) return const SizedBox.shrink();
+      return Container(
+        height: 90.h,
+        width: Get.width,
+        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 5.h),
+        child: ListView.builder(
+          scrollDirection: Axis.horizontal,
+          itemCount: controller.selectedImages.length,
+          itemBuilder: (context, index) {
+            return Stack(
+              children: [
+                Container(
+                  margin: EdgeInsets.only(right: 12.w, top: 8.h),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.grey.shade300),
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: Image.file(
+                      File(controller.selectedImages[index].path),
+                      width: 70.h,
+                      height: 70.h,
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                ),
+                // 右上角刪除按鈕
+                Positioned(
+                  top: 0,
+                  right: 0,
+                  child: GestureDetector(
+                    onTap: () {
+                      controller.selectedImages.removeAt(index);
+                      if (index < controller.ossImageKeys.length) {
+                        controller.ossImageKeys.removeAt(index);
+                      }
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.all(2),
+                      decoration: const BoxDecoration(
+                        color: Colors.red,
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(Icons.close,
+                          size: 14, color: Colors.white),
+                    ),
+                  ),
+                ),
+              ],
+            );
+          },
+        ),
+      );
+    });
+  }
+
   // ================= Input Bar =================
 
   Widget buttonRow(CustomerChatVoiceRecordBar bar) {
@@ -470,9 +579,9 @@ class boardrecommendChatPage extends GetView<boardrecommendChatController> {
           if (source == null) return;
 
           await controller.pickImage(source: source);
-          if (controller.ossImageKeys.isNotEmpty) {
-            await controller.sendAction();
-          }
+          // if (controller.ossImageKeys.isNotEmpty) {
+          //   await controller.sendAction();
+          // }
         },
         alwaysEnabled: true,
       );
