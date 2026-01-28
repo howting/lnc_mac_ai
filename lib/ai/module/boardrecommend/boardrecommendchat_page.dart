@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:extended_text/extended_text.dart';
 import 'package:extended_text_field/extended_text_field.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -270,10 +271,10 @@ class boardrecommendChatPage extends GetView<boardrecommendChatController> {
     return m?.group(0);
   }
 
-  Widget _buildMaybeImage(String text) {
+  Widget _buildMaybeImage(ChatMessage message) {
     return GestureDetector(
       onLongPress: () async {
-        final url = _extractFirstUrl(text);
+        final url = _extractFirstUrl(message.data);
         if (url == null) return;
 
         final ctx = Get.context;
@@ -318,16 +319,122 @@ class boardrecommendChatPage extends GetView<boardrecommendChatController> {
         }
       },
       // child: Text(text, style: const TextStyle(fontSize: 16)),
-      child: Markdown(
-        shrinkWrap: true,
-        onTapLink: (text, href, title) {
-          print("$text , $href , $title ");
-          Get.to(() => InappWebviewWidget(text));
-        },
-        physics: const NeverScrollableScrollPhysics(),
-        data: text,
+      child: Column(
+        children: [
+          Markdown(
+            shrinkWrap: true,
+            onTapLink: (text, href, title) {
+              print("$text , $href , $title ");
+              Get.to(() => InappWebviewWidget(text));
+            },
+            physics: const NeverScrollableScrollPhysics(),
+            data: message.data,
+          ),
+        ],
       ),
     );
+  }
+
+  Widget buildCasePanel(ChatMessage message) {
+    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      if (message.internal != null && message.internal!.isNotEmpty)
+        ...message.internal!.map((replyCase) {
+          InlineSpan span = TextSpan(children: [
+            TextSpan(
+                text: "${replyCase.title} : ",
+                style: const TextStyle(color: Colors.black)),
+            TextSpan(
+                text: replyCase.url,
+                recognizer: TapGestureRecognizer()
+                  ..onTap = () =>
+                      Get.to(() => InappWebviewWidget(replyCase.url ?? "")),
+                style: const TextStyle(
+                  color: Colors.blue,
+                )),
+          ]);
+          return Row(
+            children: [
+              Expanded(child: Text.rich(span)),
+              const SizedBox(width: 10.0),
+              ObxValue<RxBool>(
+                  (like) => InkWell(
+                        onTap: () async {
+                          final result = await controller.likeCase(
+                              replyCase, message.inquiryId ?? "");
+                          replyCase.isLiked!(result);
+                        },
+                        child: Icon(Icons.thumb_up,
+                            color: replyCase.isLiked!.value
+                                ? Colors.red
+                                : Colors.grey,
+                            size: 16),
+                      ),
+                  replyCase.isLiked!),
+              const SizedBox(width: 5.0),
+            ],
+          );
+        }).toList()
+      else
+        const Text("暫無更多模板"),
+      Align(
+        alignment: Alignment.centerRight,
+        child: Padding(
+          padding: const EdgeInsets.only(right: 5.0, bottom: 10.0),
+          child: InkWell(
+            onTap: () => message.isExpanded.toggle(),
+            child: const Text("展開更多",
+                style: TextStyle(
+                  color: Colors.blue,
+                )),
+          ),
+        ),
+      ),
+      ObxValue<RxBool>((expanded) {
+        return Offstage(
+          offstage: !expanded.value,
+          child: (message.external != null && message.external!.isNotEmpty)
+              ? Column(
+                  children: message.external!.map((replyCase) {
+                    InlineSpan span = TextSpan(children: [
+                      TextSpan(
+                          text: "${replyCase.title} : ",
+                          style: const TextStyle(color: Colors.black)),
+                      TextSpan(
+                          text: replyCase.url,
+                          recognizer: TapGestureRecognizer()
+                            ..onTap = () => Get.to(
+                                () => InappWebviewWidget(replyCase.url ?? "")),
+                          style: const TextStyle(
+                            color: Colors.blue,
+                          )),
+                    ]);
+                    return Row(
+                      children: [
+                        Expanded(child: Text.rich(span)),
+                        const SizedBox(width: 10.0),
+                        ObxValue<RxBool>(
+                            (like) => InkWell(
+                                  onTap: () async {
+                                    final result = await controller.likeCase(
+                                        replyCase, message.inquiryId ?? "");
+                                    replyCase.isLiked!(result);
+                                  },
+                                  child: Icon(Icons.thumb_up,
+                                      color: replyCase.isLiked!.value
+                                          ? Colors.red
+                                          : Colors.grey,
+                                      size: 16),
+                                ),
+                            replyCase.isLiked!),
+                        const SizedBox(width: 5.0),
+                      ],
+                    );
+                  }).toList(),
+                )
+              : const Text("暫無更多外部模板"),
+        );
+      }, message.isExpanded)
+    ]);
   }
 
   Widget buildPanel(List<ReplyMessage> replies, String question) {
@@ -354,10 +461,10 @@ class boardrecommendChatPage extends GetView<boardrecommendChatController> {
   }
 
   Widget _buildTyping() {
-    return Row(
-      key: const ValueKey('typing'),
+    return const Row(
+      key: ValueKey('typing'),
       mainAxisSize: MainAxisSize.min,
-      children: const [
+      children: [
         SizedBox(
           width: 16,
           height: 16,
@@ -370,10 +477,13 @@ class boardrecommendChatPage extends GetView<boardrecommendChatController> {
   }
 
   Widget _buildMessageBody(ChatMessage message) {
+    if (message.isFinished) {
+      return buildCasePanel(message);
+    }
     if (message.replyList == null) {
       return KeyedSubtree(
         key: const ValueKey('text_body'),
-        child: _buildMaybeImage(message.data),
+        child: _buildMaybeImage(message),
       );
     }
 

@@ -17,4 +17,5 @@ const String USER_PROFILE = "api/get_user_profile/";
 const String FEEDBACK_MODIFY_POST = "api/modify_reply/";
 const String FEEDBACK_LIKE_POST = "api/like_reply/";
 
-
+/// 按键点赞
+const String API_CASE_LIKE = "api/case/like/";

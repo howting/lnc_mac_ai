@@ -6,14 +6,12 @@ import 'package:lncmacai/ai/base/base_provider.dart';
 import 'package:lncmacai/global.dart';
 import 'dart:convert';
 
-
-
 class boardrecommendChatProvider extends BaseProvider {
   Future<Response<MapResponse>> qwenBoard(
-      String url, {
-        required String text,
-        List<String> imageKeys = const [],
-      }) {
+    String url, {
+    required String text,
+    List<String> imageKeys = const [],
+  }) {
     return post<MapResponse>(
       url,
       {
@@ -64,7 +62,9 @@ class boardrecommendChatProvider extends BaseProvider {
     );
     return result;
   }
-  Future<Response<BasefeedResponse>> modifyReply(String path, Map<String, dynamic> data) async {
+
+  Future<Response<BasefeedResponse>> modifyReply(
+      String path, Map<String, dynamic> data) async {
     final result = await post(
       path,
       data,
@@ -72,8 +72,10 @@ class boardrecommendChatProvider extends BaseProvider {
     );
     return result;
   }
+
   /// 按讚意見回饋
-  Future<Response<BasefeedResponse>> likeReply(String path, Map<String, dynamic> data) async {
+  Future<Response<BasefeedResponse>> likeReply(
+      String path, Map<String, dynamic> data) async {
     final result = await post(
       path,
       data,
@@ -81,7 +83,6 @@ class boardrecommendChatProvider extends BaseProvider {
     );
     return result;
   }
-
 
   Future<Response<BaseResponse>> textToWav(String path,
       {required String? text}) async {
@@ -91,6 +92,27 @@ class boardrecommendChatProvider extends BaseProvider {
         "input_value": text,
       },
       decoder: (data) => BaseResponse.fromJson(data),
+    );
+    return result;
+  }
+
+  Future<Response<MapMessageResponse>> caseLike(
+    String path, {
+    required String inquiryId,
+    required String caseTitle,
+    required String caseUrl,
+    required String caseSource,
+  }) async {
+    final result = await post(
+      path,
+      {
+        "employee_id": Global.profile.employeeId,
+        "inquiry_id": inquiryId,
+        "case_title": caseTitle,
+        "case_url": caseUrl,
+        "case_source": caseSource,
+      },
+      decoder: (data) => MapMessageResponse.fromJson(data),
     );
     return result;
   }

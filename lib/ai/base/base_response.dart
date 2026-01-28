@@ -8,6 +8,7 @@ class BaseResponse {
   factory BaseResponse.fromJson(Map<String, dynamic> json) => BaseResponse(
       code: json["code"], data: json["data"], error: json["error"]);
 }
+
 //語音返回格式
 class BaseWavResponse {
   String? code;
@@ -30,6 +31,16 @@ class MapResponse {
       MapResponse(code: json["code"], data: json["data"]);
 }
 
+class MapMessageResponse extends MapResponse {
+  String? message;
+
+  MapMessageResponse({this.message, super.code, super.data});
+
+  factory MapMessageResponse.fromJson(Map<String, dynamic> json) =>
+      MapMessageResponse(
+          code: json["code"], message: json["message"], data: json["data"]);
+}
+
 class BaseUploadImageResponse {
   int? code;
   String message;
@@ -41,6 +52,7 @@ class BaseUploadImageResponse {
       BaseUploadImageResponse(
           message: json["msg"], code: json["code"], data: json["data"]);
 }
+
 class BasefeedResponse {
   final String? message;
 

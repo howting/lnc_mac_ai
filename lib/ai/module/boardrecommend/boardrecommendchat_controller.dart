@@ -4,6 +4,7 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:get/get_rx/get_rx.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:path/path.dart' as p;
@@ -266,7 +267,22 @@ class boardrecommendChatController extends GetxController {
           if (finalContent.isNotEmpty) {
             msg.data = finalContent;
           }
+          final sessionId = (r["session_id"] ?? "").toString();
+          List<ReplyCase>? internal = (r["cases"]["internal"] as List).isEmpty
+              ? null
+              : (r["cases"]["internal"] as List)
+                  .map((e) => ReplyCase.fromJson(e))
+                  .toList();
+          List<ReplyCase>? external = (r["cases"]["external"] as List).isEmpty
+              ? null
+              : (r["cases"]["external"] as List)
+                  .map((e) => ReplyCase.fromJson(e))
+                  .toList();
+          msg.sessionId = sessionId;
+          msg.internal = internal;
+          msg.external = external;
           msg.isAnswering = false;
+          msg.isFinished = true;
           chatMessageList.refresh();
           _ws?.close();
           return;
@@ -342,6 +358,20 @@ class boardrecommendChatController extends GetxController {
     await audioplayer.setFilePath(filePath);
     await audioplayer.play();
   }
+
+  /// 點贊案例
+  Future<bool> likeCase(ReplyCase replyCase, String inquiryId) async {
+    final result = await _provider.caseLike(API_CASE_LIKE,
+        inquiryId: inquiryId,
+        caseTitle: replyCase.title ?? "",
+        caseUrl: replyCase.url ?? "",
+        caseSource: replyCase.source ?? "");
+    if (result.body?.code == "success" &&
+        result.body?.data?["is_liked"] is bool) {
+      return result.body?.data?["is_liked"];
+    }
+    return false;
+  }
 }
 
 // =============================
@@ -356,12 +386,20 @@ class ChatMessage {
   List<ReplyMessage>? replyList;
   List<XFile>? images;
 
+  /// 2026/01/27 version
+  String? sessionId;
+  List<ReplyCase>? internal;
+  List<ReplyCase>? external;
+  bool isFinished;
+  RxBool isExpanded = false.obs;
+
   ChatMessage({
     required this.data,
     required this.isMe,
     this.question,
     this.inquiryId,
     this.isAnswering = false,
+    this.isFinished = false,
     this.images,
     this.replyList,
   });
@@ -379,4 +417,29 @@ class ReplyMessage {
     this.isExpanded = false,
     List<String>? imageUrls,
   }) : imageUrls = imageUrls ?? [];
+}
+
+class ReplyCase {
+  String? caseId;
+  String? title;
+  String? url;
+  String? source;
+  RxBool? isLiked;
+
+  ReplyCase({
+    this.caseId,
+    this.title,
+    this.url,
+    this.source,
+    this.isLiked,
+  });
+
+  factory ReplyCase.fromJson(Map<String, dynamic> json) => ReplyCase(
+        caseId: json["case_id"],
+        title: json["title"],
+        url: json["url"],
+        source: json["source"],
+        isLiked:
+            json["is_liked"] is bool ? RxBool(json["is_liked"]) : false.obs,
+      );
 }
