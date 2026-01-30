@@ -72,6 +72,11 @@ class boardrecommendChatController extends GetxController {
     if (Get.arguments != null && Get.arguments["workOrderId"] != null) {
       workOrderId = Get.arguments["workOrderId"];
     }
+
+    chatMessageList.add(ChatMessage(
+      data: "您可问我各类风格、户型的家具模板匹配需求",
+      isMe: false,
+    ));
   }
 
   @override

@@ -81,7 +81,7 @@ class boardrecommendChatPage extends GetView<boardrecommendChatController> {
           ),
           Expanded(
             child: Text(
-              "LNCMac AI Home",
+              "LNC Mac AI",
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 18.sp,
@@ -524,10 +524,7 @@ class boardrecommendChatPage extends GetView<boardrecommendChatController> {
                     Icons.play_circle,
                     color: Colors.brown,
                   )
-                : const Icon(
-                    Icons.download_for_offline,
-                    color: Colors.brown,
-                  ),
+                : const SizedBox(),
           ),
         ),
         controller.files,
@@ -607,7 +604,7 @@ class boardrecommendChatPage extends GetView<boardrecommendChatController> {
         children: [
           Expanded(child: inputWidget()),
           sendButton(),
-          addButton(),
+          // addButton(),
           bar,
           cameraButton(),
         ],
