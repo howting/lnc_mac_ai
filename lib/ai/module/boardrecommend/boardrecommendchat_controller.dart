@@ -3,6 +3,8 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_easyloading/flutter_easyloading.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:get/get.dart';
 import 'package:get/get_rx/get_rx.dart';
 import 'package:image_picker/image_picker.dart';
@@ -59,10 +61,17 @@ class boardrecommendChatController extends GetxController {
   // =============================
   // Lifecycle
   // =============================
+
+  /// 工單號
+  String? workOrderId;
+
   @override
   void onInit() {
     super.onInit();
     textController.addListener(_updateCanSend);
+    if (Get.arguments != null && Get.arguments["workOrderId"] != null) {
+      workOrderId = Get.arguments["workOrderId"];
+    }
   }
 
   @override
@@ -371,6 +380,22 @@ class boardrecommendChatController extends GetxController {
       return result.body?.data?["is_liked"];
     }
     return false;
+  }
+
+  /// 點贊案例
+  Future<void> workOrderComplete() async {
+    EasyLoading.show(status: '工單完成中...', dismissOnTap: true);
+    final result = await _provider.workOrderComplete(API_WORK_ORDER_COMPLETE,
+        workOrderId: workOrderId ?? "");
+    Get.back();
+    EasyLoading.dismiss();
+    if (result.body?.code == "success") {
+      Get.back();
+      Fluttertoast.showToast(msg: "工單已完成。", gravity: ToastGravity.CENTER);
+    } else {
+      Fluttertoast.showToast(
+          msg: result.body?.message ?? "服務器錯誤。", gravity: ToastGravity.CENTER);
+    }
   }
 }
 

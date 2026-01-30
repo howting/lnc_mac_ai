@@ -102,6 +102,7 @@ class boardrecommendChatProvider extends BaseProvider {
     required String caseTitle,
     required String caseUrl,
     required String caseSource,
+    String? workOrderId,
   }) async {
     final result = await post(
       path,
@@ -111,7 +112,20 @@ class boardrecommendChatProvider extends BaseProvider {
         "case_title": caseTitle,
         "case_url": caseUrl,
         "case_source": caseSource,
+        "work_order_id": workOrderId
       },
+      decoder: (data) => MapMessageResponse.fromJson(data),
+    );
+    return result;
+  }
+
+  Future<Response<MapMessageResponse>> workOrderComplete(
+    String path, {
+    required String workOrderId,
+  }) async {
+    final result = await post(
+      path,
+      {"employee_id": Global.profile.employeeId, "work_order_id": workOrderId},
       decoder: (data) => MapMessageResponse.fromJson(data),
     );
     return result;

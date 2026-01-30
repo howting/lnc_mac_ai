@@ -3,23 +3,23 @@ import 'package:lncmacai/ai/module/boardrecommend/boardrecommendchat_bind.dart';
 import 'package:lncmacai/ai/module/boardrecommend/boardrecommendchat_page.dart';
 import 'package:lncmacai/ai/module/login/login_page.dart';
 import 'package:lncmacai/ai/module/module_select/module_select_view.dart';
+import 'package:lncmacai/ai/module/module_select/module_select_view_bind.dart';
 import 'package:lncmacai/ai/module/profile/profile_bind.dart';
 import 'package:lncmacai/ai/module/profile/profile_page.dart';
-
-
-
-
-
-
-
 
 part 'app_routes.dart';
 
 class AppPages {
   static final routes = [
     GetPage(name: Paths.LOGIN, page: () => LoginPage()),
-    GetPage(name: Paths.BOARD, page: () => boardrecommendChatPage(), binding: boardrecommendChatBind()),
-    GetPage(name: Paths.MODULE_SELECT, page: () => const ModuleSelectView()),
+    GetPage(
+        name: Paths.BOARD,
+        page: () => boardrecommendChatPage(),
+        binding: boardrecommendChatBind()),
+    GetPage(
+        name: Paths.MODULE_SELECT,
+        page: () => ModuleSelectView(),
+        binding: ModuleSelectViewBind()),
     GetPage(
         name: Paths.PROFILE, page: () => ProfilePage(), binding: ProfileBind()),
 //  GetPage(

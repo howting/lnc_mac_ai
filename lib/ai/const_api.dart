@@ -19,3 +19,9 @@ const String FEEDBACK_LIKE_POST = "api/like_reply/";
 
 /// 按键点赞
 const String API_CASE_LIKE = "api/case/like/";
+
+/// 創建工單
+const String API_WORK_ORDER_CREATE = "api/promotion/work-order/create/";
+
+/// 完成工單
+const String API_WORK_ORDER_COMPLETE = "api/promotion/work-order/complete/";

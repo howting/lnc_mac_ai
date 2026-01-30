@@ -21,35 +21,38 @@ import 'boardrecommendchat_controller.dart';
 class boardrecommendChatPage extends GetView<boardrecommendChatController> {
   @override
   Widget build(BuildContext context) {
-    return CustomerChatVoiceRecordLayout(
-      onCompleted: (sec, path) {
-        // 不在這裡判斷時間長短，交給 controller 做
-        print("onCompleted: $sec, $path");
-        controller.handleVoiceFile(path, durationSec: sec);
-      },
-      builder: (bar) => GestureDetector(
-        onTap: () => FocusScope.of(context).requestFocus(FocusNode()),
-        child: AnimatedContainer(
-          duration: Duration.zero,
-          height: MediaQuery.of(context).viewInsets.bottom > 0
-              ? Get.height - MediaQuery.of(context).viewInsets.bottom
-              : Get.height,
-          child: Scaffold(
-            backgroundColor: Colors.white,
-            appBar: _buildAppBar(),
-            body: Column(
-              children: [
-                Expanded(
-                  child: ObxValue<RxList>(
-                    (list) => controller.chatMessageList.isEmpty
-                        ? _buildEmptyHint()
-                        : _buildChatList(),
-                    controller.chatMessageList,
+    return PopScope(
+      canPop: false,
+      child: CustomerChatVoiceRecordLayout(
+        onCompleted: (sec, path) {
+          // 不在這裡判斷時間長短，交給 controller 做
+          print("onCompleted: $sec, $path");
+          controller.handleVoiceFile(path, durationSec: sec);
+        },
+        builder: (bar) => GestureDetector(
+          onTap: () => FocusScope.of(context).requestFocus(FocusNode()),
+          child: AnimatedContainer(
+            duration: Duration.zero,
+            height: MediaQuery.of(context).viewInsets.bottom > 0
+                ? Get.height - MediaQuery.of(context).viewInsets.bottom
+                : Get.height,
+            child: Scaffold(
+              backgroundColor: Colors.white,
+              appBar: _buildAppBar(),
+              body: Column(
+                children: [
+                  Expanded(
+                    child: ObxValue<RxList>(
+                      (list) => controller.chatMessageList.isEmpty
+                          ? _buildEmptyHint()
+                          : _buildChatList(),
+                      controller.chatMessageList,
+                    ),
                   ),
-                ),
-                buildImagePreviewBar(),
-                buttonRow(bar),
-              ],
+                  buildImagePreviewBar(),
+                  buttonRow(bar),
+                ],
+              ),
             ),
           ),
         ),
@@ -65,12 +68,15 @@ class boardrecommendChatPage extends GetView<boardrecommendChatController> {
       automaticallyImplyLeading: false,
       title: Row(
         children: [
-          Container(
-            alignment: Alignment.centerLeft,
-            height: 50.h,
-            width: 90.w,
-            child: Image.asset(
-              "assets/images/aisalelogo.png",
+          InkWell(
+            onTap: () => Get.dialog(workOrderCompleteDialog()),
+            child: Container(
+              alignment: Alignment.centerLeft,
+              height: 50.h,
+              width: 90.w,
+              child: Image.asset(
+                "assets/images/aisalelogo.png",
+              ),
             ),
           ),
           Expanded(
@@ -695,6 +701,79 @@ class boardrecommendChatPage extends GetView<boardrecommendChatController> {
         },
         alwaysEnabled: true,
       );
+
+  /// 完成工单dialog
+  Widget workOrderCompleteDialog() {
+    return Material(
+      color: Colors.transparent,
+      child: GestureDetector(
+        onTap: () => Get.back(),
+        child: Container(
+          height: Get.height,
+          width: Get.width,
+          color: Colors.transparent,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                height: Get.height * .2,
+                width: Get.width - 60,
+                decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(15)),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Text("確定要完成工單嗎?",
+                        style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 17,
+                            color: Colors.black)),
+                    const SizedBox(height: 25),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        ElevatedButton(
+                            style: ButtonStyle(
+                                backgroundColor:
+                                    WidgetStateProperty.all(Colors.white),
+                                shape: WidgetStateProperty.all(
+                                    RoundedRectangleBorder(
+                                        borderRadius:
+                                            BorderRadius.circular(15)))),
+                            child: const Text("取消",
+                                style: TextStyle(
+                                    fontWeight: FontWeight.w500,
+                                    fontSize: 17,
+                                    color: Colors.black)),
+                            onPressed: () => Get.back()),
+                        const SizedBox(width: 16),
+                        ElevatedButton(
+                            style: ButtonStyle(
+                                backgroundColor: WidgetStateProperty.all(
+                                    const Color(0xFF00ABB3)),
+                                shape: WidgetStateProperty.all(
+                                    RoundedRectangleBorder(
+                                        borderRadius:
+                                            BorderRadius.circular(15)))),
+                            child: const Text("確定",
+                                style: TextStyle(
+                                    fontWeight: FontWeight.w500,
+                                    fontSize: 17,
+                                    color: Colors.white)),
+                            onPressed: () => controller.workOrderComplete()),
+                      ],
+                    )
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 
 // ================= Helper =================
 // 下面 image / url / panel helper
