@@ -1,3 +1,5 @@
+import 'package:lncmacai/ai/module/boardrecommend/boardrecommendchat_controller.dart';
+
 class ProfileModel {
   String? employeeId;
   String? userName;
@@ -82,4 +84,82 @@ class HistoryQuestionModel {
     selectedModel = json['selected_model'];
     inquiry = json['inquiry'];
   }
+}
+
+class WorkOrderModel {
+  String? workOrderId;
+  String? adminEmployeeId;
+  String? adminUsername;
+  String? promotionUserName;
+  String? promotionUserPhone;
+  String? status;
+  String? statusDisplay;
+  String? createdAt;
+  String? completedAt;
+  int? totalCases;
+  String? remark;
+  List<LikedCase>? internal;
+  List<LikedCase>? external;
+
+  WorkOrderModel({
+    this.workOrderId,
+    this.adminEmployeeId,
+    this.adminUsername,
+    this.promotionUserName,
+    this.promotionUserPhone,
+    this.status,
+    this.statusDisplay,
+    this.createdAt,
+    this.completedAt,
+    this.totalCases,
+    this.remark,
+    this.internal,
+    this.external,
+  });
+
+  WorkOrderModel.fromJson(Map<String, dynamic> json) {
+    workOrderId = json['work_order_id'];
+    adminEmployeeId = json['admin_employee_id'];
+    adminUsername = json['admin_username'];
+    promotionUserName = json['promotion_user_name'];
+    promotionUserPhone = json['promotion_user_phone'];
+    status = json['status'];
+    statusDisplay = json['status_display'];
+    createdAt = json['created_at'];
+    completedAt = json['completed_at'];
+    totalCases = json['total_cases'];
+    remark = json['remark'];
+    if (json['liked_cases']['internal'] != null &&
+        json['liked_cases']['internal'].length > 0) {
+      internal = <LikedCase>[];
+      json['liked_cases']['internal'].forEach((v) {
+        internal!.add(LikedCase.fromJson(v));
+      });
+    }
+    if (json['liked_cases']['external'] != null &&
+        json['liked_cases']['external'].length > 0) {
+      external = <LikedCase>[];
+      json['liked_cases']['external'].forEach((v) {
+        external!.add(LikedCase.fromJson(v));
+      });
+    }
+  }
+}
+
+class LikedCase {
+  String? caseTitle;
+  String? caseUrl;
+  String? likedAt;
+
+  LikedCase({
+    this.caseTitle,
+    this.caseUrl,
+    this.likedAt,
+  });
+
+  factory LikedCase.fromJson(Map<String, dynamic> json) => LikedCase(
+        caseTitle: json["case_title"],
+        caseUrl: json["case_url"],
+        likedAt: json["liked_at"],
+      );
 }

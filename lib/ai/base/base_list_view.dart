@@ -23,7 +23,7 @@ abstract class BaseListView<T extends BaseListController> extends GetView<T> {
           ),
           centerTitle: true,
           leading: InkWell(
-            child: Icon(Icons.chevron_left),
+            child: const Icon(Icons.chevron_left),
             onTap: () => Get.back(),
           ),
         ),
@@ -38,7 +38,7 @@ abstract class BaseListView<T extends BaseListController> extends GetView<T> {
                         separatorBuilder(context, index)
                       ]);
                     }),
-                onLoading: CupertinoActivityIndicator(
+                onLoading: const CupertinoActivityIndicator(
                   color: Colors.grey,
                 )
                 // ListView.separated(

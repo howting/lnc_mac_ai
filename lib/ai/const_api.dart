@@ -25,3 +25,6 @@ const String API_WORK_ORDER_CREATE = "api/promotion/work-order/create/";
 
 /// 完成工單
 const String API_WORK_ORDER_COMPLETE = "api/promotion/work-order/complete/";
+
+/// 查詢所有工單
+const String API_WORK_ORDER_LIST = "api/promotion/work-order/list/";

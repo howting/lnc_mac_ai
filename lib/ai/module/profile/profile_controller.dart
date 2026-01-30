@@ -1,4 +1,5 @@
 import 'package:get/get.dart';
+import 'package:lncmacai/ai/base/base_list_controller.dart';
 import 'package:lncmacai/ai/const_api.dart';
 import 'package:lncmacai/ai/const_values.dart';
 import 'package:lncmacai/ai/module/login/login_controller.dart';
@@ -8,7 +9,7 @@ import 'package:lncmacai/ai/module/profile/profile_provider.dart';
 import 'package:lncmacai/ai/utils/storage.dart';
 import 'package:lncmacai/global.dart';
 
-class ProfileController extends GetxController with StateMixin {
+class ProfileController extends BaseListController<WorkOrderModel> {
   final ProfileProvider _provider;
   ProfileController(this._provider);
 
@@ -19,25 +20,19 @@ class ProfileController extends GetxController with StateMixin {
   void onInit() {
     super.onInit();
     profile = Global.profile;
-    getProfileNHistroy();
   }
 
-  Future<void> getProfileNHistroy() async {
-    final result = await _provider.getProfile(
-      USER_PROFILE,
-      employeeid: Global.profile.employeeId,
-    );
-    if (result.body?.code == "success") {
-      if (result.body?.data?["inquiries"] != null) {
-        historyQuestions.clear();
-        result.body?.data?["inquiries"].forEach((element) {
-          historyQuestions.add(HistoryQuestionModel.fromJson(element));
-        });
-      }
-      change(historyQuestions, status: RxStatus.success());
-    } else {
-      Get.snackbar("Error", "请求失敗！");
+  @override
+  Future<List<WorkOrderModel>> loadDataWithIndex({int index = 1}) async {
+    var result =
+        await _provider.getWorkOrderList(API_WORK_ORDER_LIST, pageIndex: index);
+    if (result.body?.data != null) {
+      pageCount = result.body?.data?['pagination']['total_pages'];
+      return (result.body?.data?['work_orders'] as List)
+          .map((e) => WorkOrderModel.fromJson(e))
+          .toList();
     }
+    return [];
   }
 
   Future<void> logout() async {

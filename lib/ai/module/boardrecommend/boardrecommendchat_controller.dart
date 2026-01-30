@@ -374,7 +374,8 @@ class boardrecommendChatController extends GetxController {
         inquiryId: inquiryId,
         caseTitle: replyCase.title ?? "",
         caseUrl: replyCase.url ?? "",
-        caseSource: replyCase.source ?? "");
+        caseSource: replyCase.source ?? "",
+        workOrderId: workOrderId ?? "");
     if (result.body?.code == "success" &&
         result.body?.data?["is_liked"] is bool) {
       return result.body?.data?["is_liked"];
@@ -382,7 +383,7 @@ class boardrecommendChatController extends GetxController {
     return false;
   }
 
-  /// 點贊案例
+  /// 點贊
   Future<void> workOrderComplete() async {
     EasyLoading.show(status: '工單完成中...', dismissOnTap: true);
     final result = await _provider.workOrderComplete(API_WORK_ORDER_COMPLETE,
